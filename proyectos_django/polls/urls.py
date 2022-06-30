@@ -13,5 +13,5 @@ urlpatterns=[
     #ahora
     path("<int:pk>/results/", ResultView.as_view(),name="results"),
     #Ex: /polls/5/votes
-    path("<int:pk>/vote/", vote,name="vote")
+    path("<int:question_id>/vote/", vote,name="vote")
 ]

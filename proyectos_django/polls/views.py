@@ -4,6 +4,8 @@ from django.urls import reverse
 from .models import Question, Choice
 from django.views import generic
 
+from django.utils import timezone
+
 # Create your views here.
 #generic view cuando son clases
 class IndexView(generic.ListView):
@@ -12,11 +14,18 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         """Return the last five published questions"""
-        return Question.objects.order_by("-pub_date")[:5]
+        return Question.objects.filter(pub_date__lte=timezone.now()).order_by("-pub_date")[:5]
 
 class DetailView(generic.DetailView):
     model=Question
     template_name = "polls/detail.html"
+
+    def get_queryset(self):
+        """
+        Exclude any questions that arn't published yet
+
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
 
 class ResultView(generic.DetailView):
     model = Question
@@ -44,15 +53,20 @@ class ResultView(generic.DetailView):
 
 
 def vote(request, question_id):
-    question=get_object_or_404(Question, pk=question_id)
+
+
+    question = get_object_or_404(Question, pk=question_id)
     try:
-        selected_choice=question.choice_set.get(pk=request.POST["choice"])
+        selected_choice = question.choice_set.get(pk=request.POST["choice"])
     except(KeyError, Choice.DoesNotExist):
         return render(request,"polls/detail.html",{
             "question":question,
             "error_message": "no elegiste una respuesta"
         })
     else:
-        selected_choice.votes+=1
+        selected_choice.votes += 1
         selected_choice.save()
-        return HttpResponseRedirect(reverse("polls:results",args=(question.id,)))
+        return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
+
+
+    #return HttpResponse("algo pasa")
